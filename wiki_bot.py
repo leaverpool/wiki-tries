@@ -61,10 +61,33 @@ if site.status_code is 200:
 site = requests.get('https://ru.wikipedia.org/wiki/Заглавная_страница')
 if site.status_code is 200:
     content = BeautifulSoup(site.content, 'html.parser')
+
+    # ищем картинку picoftheday_pic_href
     picoftheday_pic = content.find_all(class_='main-box-content')
-    print(picoftheday_pic[0])
+    #print(picoftheday_pic[0])
+    m = re.search('src="(\s|\S)*?\.jpg"', str(picoftheday_pic[0]))
+    picoftheday_pic = m.group(0)
+    #print(picoftheday_pic)
+    picoftheday_pic_href = ('<a href="https:' + picoftheday_pic[5:-1] + '">.</a>')
+    #print(picoftheday_pic_href)  # <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Black-headed_lapwing_%28Vanellus_tectus_tectus%29.jpg/500px-Black-headed_lapwing_%28Vanellus_tectus_tectus%29.jpg">.</a>
 
-
-
+    # ищем текст picoftheday_text
     picoftheday_text = content.find_all(class_='main-box-imageCaption')
-    print(picoftheday_text[0])
+    #print(picoftheday_text[0])
+    m = re.search('<a href="(\s|\S)*?"', str(picoftheday_text[0]))
+    picoftheday_text = m.group(0)
+    #print(picoftheday_text)
+    picoftheday_text = ('https://ru.wikipedia.org' + picoftheday_text[9:-1])
+    #print(picoftheday_text)  # https://ru.wikipedia.org/wiki/Чибисы
+    site = requests.get(picoftheday_text)
+    if site.status_code is 200:
+        content = BeautifulSoup(site.content, 'html.parser')
+        picoftheday_text = content.find_all(class_='mw-parser-output')
+        m = re.search('<p><b>(\s|\S)*?</p>', str(picoftheday_text[0]))
+        picoftheday_text = m.group(0)
+        #print(picoftheday_text)
+        picoftheday_text = (''.join(BeautifulSoup(picoftheday_text, "html.parser").findAll(text=True)))
+        picoftheday_text = picoftheday_text[:400]  # обрезаем для сообщения, если есть лимит на кол-во знаков
+        print(picoftheday_text)
+
+
