@@ -5,7 +5,7 @@ import re
 from bs4 import BeautifulSoup
 from time import sleep
 
-# парсим глагне вики и берём статью дня
+# парсим глагне вики и берём статью дня, отправляем в виде текста + картинка href в конце
 site = requests.get('https://ru.wikipedia.org/wiki/Заглавная_страница')
 if site.status_code is 200:
     content = BeautifulSoup(site.content, 'html.parser')
@@ -47,17 +47,15 @@ if site.status_code is 200:
     stat_text = str(m.group(0)[1:])
     #print(stat_text)  # получаем полный текст статьи, который идёт с красной строки, включает название
 
-
-
-    #requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendPhoto?chat_id=292397556&photo=' + stat_img + '&caption=' + stat_text + ' ' + stat_headline + "&parse_mode=HTML")
-    requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendMessage?chat_id=292397556&text=' + stat_text[:-3] + stat_img_href + "&parse_mode=HTML")
+    # текст работает
+    #requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendMessage?chat_id=292397556&text=' + stat_text[:-3] + stat_img_href + "&parse_mode=HTML")
 
 
 
 
 
 
-# парсим глагне вики и берём изображение дня
+# парсим глагне вики и берём изображение дня, постим в виде фотографии + подписи
 site = requests.get('https://ru.wikipedia.org/wiki/Заглавная_страница')
 if site.status_code is 200:
     content = BeautifulSoup(site.content, 'html.parser')
@@ -68,6 +66,7 @@ if site.status_code is 200:
     m = re.search('src="(\s|\S)*?\.jpg"', str(picoftheday_pic[0]))
     picoftheday_pic = m.group(0)
     #print(picoftheday_pic)
+    picoftheday_pic = ('https:' + picoftheday_pic[5:-1])
     picoftheday_pic_href = ('<a href="https:' + picoftheday_pic[5:-1] + '">.</a>')
     #print(picoftheday_pic_href)  # <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Black-headed_lapwing_%28Vanellus_tectus_tectus%29.jpg/500px-Black-headed_lapwing_%28Vanellus_tectus_tectus%29.jpg">.</a>
 
@@ -87,7 +86,9 @@ if site.status_code is 200:
         picoftheday_text = m.group(0)
         #print(picoftheday_text)
         picoftheday_text = (''.join(BeautifulSoup(picoftheday_text, "html.parser").findAll(text=True)))
-        picoftheday_text = picoftheday_text[:400]  # обрезаем для сообщения, если есть лимит на кол-во знаков
-        print(picoftheday_text)
+        #picoftheday_text = picoftheday_text[:400]  # обрезаем для сообщения, если есть лимит на кол-во знаков
+        #print(picoftheday_text)
+
+    print(requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendPhoto?chat_id=292397556&photo=' + picoftheday_pic + '&caption=' + picoftheday_text))
 
 
