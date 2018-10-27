@@ -50,7 +50,7 @@ if site.status_code is 200:
 
 
     #requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendPhoto?chat_id=292397556&photo=' + stat_img + '&caption=' + stat_text + ' ' + stat_headline + "&parse_mode=HTML")
-    requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendMessage?chat_id=292397556&text=qweqwe')
+    requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendMessage?chat_id=292397556&text=' + stat_text[:-3] + stat_img_href + "&parse_mode=HTML")
 
 
 
@@ -63,6 +63,8 @@ if site.status_code is 200:
     content = BeautifulSoup(site.content, 'html.parser')
     picoftheday_pic = content.find_all(class_='main-box-content')
     print(picoftheday_pic[0])
+
+
 
     picoftheday_text = content.find_all(class_='main-box-imageCaption')
     print(picoftheday_text[0])
