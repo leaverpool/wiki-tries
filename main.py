@@ -4,6 +4,7 @@ import requests
 import time
 import urllib
 import config
+import datetime
 from bs4 import BeautifulSoup
 import re
 
@@ -22,7 +23,7 @@ def get_json_from_url(url):
     content = get_url(url)
     js = json.loads(content)
     return js
-    print (str(js))
+    #print(str(datetime.datetime.now()) + str(js))
 
 def get_updates(offset=None):
     url = URL + "getUpdates"
@@ -43,7 +44,7 @@ def get_last_update_id(updates):
 def echo_all(updates):
       for update in updates["result"]:
           text = update["message"]["text"]
-          print(text)
+          print(str(datetime.datetime.now()) + ': ' + text)
           if str(text) == "123":
             text = "циферки!"
           if "кого любит Андрей" in text: 
@@ -91,6 +92,8 @@ def shutka():
       m = re.search('\S(.|\n)*?(.|\n)*?(\n\s )', bingo)
       bingo = m.group(0)
       return bingo
+
+print(str(datetime.datetime.now()) + ': SUTATO!')
 
 if __name__ == '__main__':
     main()
