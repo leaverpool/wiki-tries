@@ -45,16 +45,26 @@ def echo_all(updates):
     for update in updates["result"]:
         text = update["message"]["text"]
         print(str(datetime.datetime.now()) + ': ' + text)
+
         if str(text) == "123":
-            text = "циферки!"
-        if re.search('кого любит андрей', text, re.IGNORECASE):
-            text = "Настю!"
-        if re.search('(пошути)|(шуткани)', text, re.IGNORECASE):
-            text = shutka()
-        if re.search('статья вики', text, re.IGNORECASE):
-            text = wiki_stat_oftheday()
-        chat = update["message"]["chat"]["id"]
-        send_message(text, chat)
+            send_message("циферки!", update["message"]["chat"]["id"])
+
+        elif re.search('кого любит андрей', text, re.IGNORECASE):
+            send_message("Настю!", update["message"]["chat"]["id"])
+
+        elif re.search('(пошути)|(шуткани)', text, re.IGNORECASE):
+            send_message(shutka(), update["message"]["chat"]["id"])
+
+        elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
+            send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
+
+        elif re.search('(картинка вики)|(вики картинка)', text, re.IGNORECASE):
+            send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
+            #print(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1])
+
+        #chat = update["message"]["chat"]["id"]
+        else:
+            send_message(str('+ ' + text + ' +'), update["message"]["chat"]["id"])
         time.sleep(1)
 
 
@@ -141,6 +151,45 @@ def wiki_stat_oftheday():
 
         output = stat_text + stat_img_href
         return output
+
+def wiki_pic_oftheday():
+    # парсим глагне вики и берём изображение дня, постим в виде фотографии + подписи
+    site = requests.get('https://ru.wikipedia.org/wiki/Заглавная_страница')
+    if site.status_code is 200:
+        content = BeautifulSoup(site.content, 'html.parser')
+
+        # ищем картинку picoftheday_pic_href
+        picoftheday_pic = content.find_all(class_='main-box-content')
+        # print(picoftheday_pic[0])
+        m = re.search('src="(\s|\S)*?\.jpg"', str(picoftheday_pic[0]))
+        picoftheday_pic = m.group(0)
+        # print(picoftheday_pic)
+        picoftheday_pic = ('https:' + picoftheday_pic[5:-1])
+        picoftheday_pic_href = ('<a href="https:' + picoftheday_pic[5:-1] + '">.</a>')
+        # print(picoftheday_pic_href)  # <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Black-headed_lapwing_%28Vanellus_tectus_tectus%29.jpg/500px-Black-headed_lapwing_%28Vanellus_tectus_tectus%29.jpg">.</a>
+
+        # ищем текст picoftheday_text
+        picoftheday_text = content.find_all(class_='main-box-imageCaption')
+        # print(picoftheday_text[0])
+        m = re.search('<a href="(\s|\S)*?"', str(picoftheday_text[0]))
+        picoftheday_text = m.group(0)
+        # print(picoftheday_text)
+        picoftheday_text = ('https://ru.wikipedia.org' + picoftheday_text[9:-1])
+        # print(picoftheday_text)  # https://ru.wikipedia.org/wiki/Чибисы
+        site = requests.get(picoftheday_text)
+        if site.status_code is 200:
+            content = BeautifulSoup(site.content, 'html.parser')
+            picoftheday_text = content.find_all(class_='mw-parser-output')
+            m = re.search('<p><b>(\s|\S)*?</p>', str(picoftheday_text[0]))
+            picoftheday_text = m.group(0)
+            # print(picoftheday_text)
+            picoftheday_text = (''.join(BeautifulSoup(picoftheday_text, "html.parser").findAll(text=True)))
+            # picoftheday_text = picoftheday_text[:400]  # обрезаем для сообщения, если есть лимит на кол-во знаков
+            # print(picoftheday_text)
+
+        return picoftheday_pic, picoftheday_text
+        #print(requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendPhoto?chat_id=292397556&photo=' + picoftheday_pic + '&caption=' + picoftheday_text))
+
 
 
 
