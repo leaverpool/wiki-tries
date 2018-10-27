@@ -1,0 +1,179 @@
+
+регулярочка:::
+</div>(.|\n)*?</p>
+
+
+регулярочка::: ещё одна
+\n{1}(.|\n)*?\.\n{2}
+
+
+
+
+
+
+#from time import sleep
+
+#a = requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/getUpdates')
+#a = a.text
+#g = requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendMessage?chat_id=292397556&text=' + a)
+
+#sleep(10)
+
+
+
+
+
+
+
+
+
+
+
+url = 'https://ru.wikipedia.org/wiki/Заглавная_страница'
+r = requests.get(url)
+text = r.text
+
+#key1 = (r'Избранная статья</div>(.|\n)*?</p>')
+key1 = (r'Избранная статья</div>(.|\n)*?</p>')
+
+print(key1)
+match1 = re.findall(key1, text)
+print(match1)
+#print(text)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# import requests
+# from bs4 import BeautifulSoup
+# site = requests.get('https://stackoverflow.com/');
+# if site.status_code is 200:
+#     content = BeautifulSoup(site.content, 'html.parser')
+#     questions = content.find_all(class_='question-summary')
+#     for question in questions:
+#         topic = question.find(class_='question-hyperlink').get_text()
+#         url =   question.find(class_='question-hyperlink').get('href')
+#         views = question.find(class_='views').find(class_='mini-counts').find('span').get_text()
+#         answers = question.find(class_='status').find(class_='mini-counts').find('span').get_text()
+#         votes = question.find(class_='votes').find(class_='mini-counts').find('span').get_text()
+
+# print(content)
+# print(questions)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import requests
+import re
+from bs4 import BeautifulSoup
+from time import sleep
+
+
+
+# парсим глагне вики и берём статью дня
+site = requests.get('https://ru.wikipedia.org/wiki/Заглавная_страница');
+if site.status_code is 200:
+    content = BeautifulSoup(site.content, 'html.parser')
+    questions = content.find_all(class_='main-box-responsive-image')
+
+    # Избавляемся от хтмл тэгов, оставляем только текст
+    text = ''.join(BeautifulSoup(str(questions[0]), "html.parser").findAll(text=True))
+    #print(text)
+
+    # убираем лишнее 1 раз
+    m = re.search('\n(.|\n)*?\.\n', text)
+    bingo = m.group(0)
+    #print(bingo)
+
+    # убираем лишнее 2 раз
+    m = re.search('\S(.|\n)*', bingo)
+    bingo = m.group(0)
+    print(bingo)
+
+
+#requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendMessage?chat_id=292397556&text=' + bingo)
+#sleep(10)
+
+
+
+
+
+while True:
+    # парсим итхэппенс и берём случайную хохму
+    site = requests.get('https://ithappens.me/random');
+    if site.status_code is 200:
+      content = BeautifulSoup(site.content, 'html.parser')
+      questions = content.find_all(class_='story')
+
+      # Избавляемся от хтмл тэгов, оставляем только текст
+      text = ''.join(BeautifulSoup(str(questions[0]), "html.parser").findAll(text=True))
+      #print(text)
+
+      # убираем лишнее 1 раз
+      m = re.search('\n{5}(.|\n)*?(\.(.|\n)*?noindex)', text)
+      bingo = m.group(0)
+      #print(bingo)
+
+      # убираем лишнее 2 раз
+      m = re.search('\S(.|\n)*?(.|\n)*?(\n\s )', bingo)
+      bingo = m.group(0)
+      print(bingo)
+
+
+      # отправляем ботом в определенный чат
+      requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendMessage?chat_id=292397556&text=' + bingo)
+      sleep(360)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

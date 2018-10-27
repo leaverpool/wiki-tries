@@ -1,11 +1,8 @@
-# -*- encoding: utf-8 -*-
 import json
 import requests
 import time
 import urllib
 import config
-from bs4 import BeautifulSoup
-import re
 
 
 TOKEN = "652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20"
@@ -22,7 +19,7 @@ def get_json_from_url(url):
     content = get_url(url)
     js = json.loads(content)
     return js
-    print (str(js))
+
 
 def get_updates(offset=None):
     url = URL + "getUpdates"
@@ -39,21 +36,11 @@ def get_last_update_id(updates):
     return max(update_ids)
 
 
-# здесь мы формируем ответные сообщения
 def echo_all(updates):
-      for update in updates["result"]:
-          text = update["message"]["text"]
-          print(text)
-          if str(text) == "123":
-            text = "циферки!"
-          if "кого любит Андрей" in text: 
-            text = "Настю!"
-          if "пошути" in text: 
-            text = shutka()
-          chat = update["message"]["chat"]["id"]
-          send_message(text, chat)
-          time.sleep(1)
-
+    for update in updates["result"]:
+        text = update["message"]["text"]
+        chat = update["message"]["chat"]["id"]
+        send_message(text, chat)
 
 
 def get_last_chat_id_and_text(updates):
@@ -69,7 +56,7 @@ def send_message(text, chat_id):
     url = URL + "sendMessage?text={}&chat_id={}".format(text, chat_id)
     get_url(url)
 
-# главный скрипт
+
 def main():
     last_update_id = None
     while True:
@@ -77,24 +64,8 @@ def main():
         if len(updates["result"]) > 0:
             last_update_id = get_last_update_id(updates) + 1
             echo_all(updates)
-        time.sleep(5)
+        time.sleep(10)
 
-def shutka():
-  # парсим итхэппенс и берём случайную хохму
-    site = requests.get('https://ithappens.me/random');
-    if site.status_code is 200:
-      content = BeautifulSoup(site.content, 'html.parser')
-      questions = content.find_all(class_='story')
-      text = ''.join(BeautifulSoup(str(questions[0]), "html.parser").findAll(text=True))
-      m = re.search('\n{5}(.|\n)*?(\.(.|\n)*?noindex)', text)
-      bingo = m.group(0)
-      m = re.search('\S(.|\n)*?(.|\n)*?(\n\s )', bingo)
-      bingo = m.group(0)
-      return bingo
 
 if __name__ == '__main__':
     main()
-
-
-
-
