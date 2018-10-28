@@ -69,8 +69,11 @@ def echo_all(updates):
         elif re.search('(bayan)|(баян)|(баш)|(история)', text, re.IGNORECASE):
             send_message(shutka_bash(), update["message"]["chat"]["id"])
 
-        elif re.search('(film)|(фильм)|(что посмотреть)|(кино)', text, re.IGNORECASE):
-            send_message(good_film(), update["message"]["chat"]["id"])
+        elif re.search('(film)|(кинопоиск)', text, re.IGNORECASE):
+            send_message(good_film_kinopoisk(), update["message"]["chat"]["id"])
+
+        elif re.search('(imdb)|(фильм)|(что посмотреть)|(кино)', text, re.IGNORECASE):
+            send_message(good_film_imdb(), update["message"]["chat"]["id"])
 
         elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
             send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
@@ -132,7 +135,7 @@ def shutka_bash():
         return str(text_wow)
 
 
-def good_film():
+def good_film_kinopoisk():
     # парсим кинопоиск и берём случайный хороший фильм с 2010 года и с рейтингом не ниже 7.4 (максимум 200 в списке)
     site = requests.get('https://www.kinopoisk.ru/top/navigator/m_act[years]/2010%3A2018/m_act[num_vote]/1005/m_act[rating]/7.4%3A/m_act[tomat_rating]/71%3A/m_act[review_procent]/60%3A/m_act[ex_rating]/7.5%3A/m_act[is_film]/on/order/rating/perpage/200/#results')
     if site.status_code is 200:
@@ -145,6 +148,18 @@ def good_film():
         chosen_good_film_text = ' '
         text_message = chosen_good_film_text + chosen_good_film_href
         return text_message
+
+
+def good_film_imdb():
+    # парсим IMDB и берём случайный фильм из сотни сравнительно новых и трендовых
+    site = requests.get('https://www.imdb.com/chart/moviemeter?pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=4da9d9a5-d299-43f2-9c53-f0efa18182cd&pf_rd_r=KS4GXFQ7P2TBMQ4W7ZRR&pf_rd_s=right-4&pf_rd_t=15506&pf_rd_i=toptv&ref_=chttvtp_ql_2')
+    if site.status_code is 200:
+        content = BeautifulSoup(site.content, 'html5lib')
+        good_films = content.find_all(class_='titleColumn')
+        chosen_good_film = good_films[random.randint(0, len(good_films) - 1)]
+        m = re.search('<a href="(\s|\S)*?"', str(chosen_good_film))
+        chosen_good_film_url = ('https://www.imdb.com' + m.group(0)[9:-1])
+        return chosen_good_film_url
 
 
 def wiki_stat_oftheday():
@@ -187,42 +202,28 @@ def wiki_stat_oftheday():
         output = stat_text + stat_img_href
         return output
 
+
 def wiki_pic_oftheday():
     # парсим глагне вики и берём изображение дня, постим в виде фотографии + подписи
     site = requests.get('https://ru.wikipedia.org/wiki/Заглавная_страница')
     if site.status_code is 200:
-        content = BeautifulSoup(site.content, 'html.parser')
+        content = BeautifulSoup(site.content, 'html5lib')
 
         # ищем картинку picoftheday_pic_href
         picoftheday_pic = content.find_all(class_='main-box-content')
-        # print(picoftheday_pic[0])
-        m = re.search('src="(\s|\S)*?\.jpg"', str(picoftheday_pic[0]))
-        picoftheday_pic = m.group(0)
-        # print(picoftheday_pic)
+        picoftheday_pic = re.search('src="(\s|\S)*?\.jpg"', str(picoftheday_pic[0])).group(0)
         picoftheday_pic = ('https:' + picoftheday_pic[5:-1])
-        picoftheday_pic_href = ('<a href="https:' + picoftheday_pic[5:-1] + '">.</a>')
-        # print(picoftheday_pic_href)  # <a href="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Black-headed_lapwing_%28Vanellus_tectus_tectus%29.jpg/500px-Black-headed_lapwing_%28Vanellus_tectus_tectus%29.jpg">.</a>
+        # print(picoftheday_pic)
 
         # ищем текст picoftheday_text
-        picoftheday_text = content.find_all(class_='main-box-imageCaption')
-        # print(picoftheday_text[0])
-        m = re.search('<a href="(\s|\S)*?"', str(picoftheday_text[0]))
-        picoftheday_text = m.group(0)
-        # print(picoftheday_text)
-        picoftheday_text = ('https://ru.wikipedia.org' + picoftheday_text[9:-1])
-        # print(picoftheday_text)  # https://ru.wikipedia.org/wiki/Чибисы
-        site = requests.get(picoftheday_text)
-        if site.status_code is 200:
-            content = BeautifulSoup(site.content, 'html.parser')
-            picoftheday_text = content.find_all(class_='mw-parser-output')
-            m = re.search('<p><b>(\s|\S)*?</p>', str(picoftheday_text[0]))
-            picoftheday_text = m.group(0)
-            # print(picoftheday_text)
-            picoftheday_text = (''.join(BeautifulSoup(picoftheday_text, "html.parser").findAll(text=True)))
-            # picoftheday_text = picoftheday_text[:400]  # обрезаем для сообщения, если есть лимит на кол-во знаков
-            # print(picoftheday_text)
+        picoftheday_text_with_hrefs = content.find_all(class_='main-box-imageCaption')
+        picoftheday_text_with_hrefs = str(picoftheday_text_with_hrefs[0])[39:-12]
+        picoftheday_text_with_hrefs = picoftheday_text_with_hrefs.replace("/wiki/", "https://ru.wikipedia.org/wiki/")
 
-        return picoftheday_pic, picoftheday_text
+        print(picoftheday_pic)
+        print(picoftheday_text_with_hrefs)
+
+        return picoftheday_pic, picoftheday_text_with_hrefs
 
 
 
