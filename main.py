@@ -7,10 +7,11 @@ import config
 import datetime
 from bs4 import BeautifulSoup
 import re
-
+import random
 
 TOKEN = "652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20"
 URL = "https://api.telegram.org/bot{}/".format(TOKEN)
+
 
 
 def get_url(url):
@@ -18,12 +19,10 @@ def get_url(url):
     content = response.content.decode("utf8")
     return content
 
-
 def get_json_from_url(url):
     content = get_url(url)
     js = json.loads(content)
     return js
-    #print(str(datetime.datetime.now()) + str(js))
 
 def get_updates(offset=None):
     url = URL + "getUpdates"
@@ -31,7 +30,6 @@ def get_updates(offset=None):
         url += "?offset={}".format(offset)
     js = get_json_from_url(url)
     return js
-
 
 def get_last_update_id(updates):
     update_ids = []
@@ -49,20 +47,37 @@ def echo_all(updates):
         if str(text) == "123":
             send_message("циферки!", update["message"]["chat"]["id"])
 
+        elif re.search('(прив)|(хэй)|(здрав)|(добрый)|(hi)|(hello)', text, re.IGNORECASE):
+            send_message("""Привет! Это тестовый бот, но он уже кое-что умеет (например, постить баяны с Баша).
+Список всех доступных команд: /help""", update["message"]["chat"]["id"])
+
+        elif re.search('(умеешь)|(help)|(command)|(помощь)|(команд)|(возможност)', text, re.IGNORECASE):
+            send_message("""Список всех команд, известных боту:
+Шутка с ithappens: (ithumor)|(пошути)|(шуткани)
+Баян с bash: (bayan)|(баян)|(баш)|(история)
+Хороший фильм: (film)|(фильм)|(что посмотреть)|(кино)
+Статья дня с Вики (допилю, что отправлялась автоматом): (статья вики)|(вики статья)
+Картинка дня с Вики (тоже допилю): (картинка вики)|(вики картинка)
+            """, update["message"]["chat"]["id"])
+
         elif re.search('кого любит андрей', text, re.IGNORECASE):
             send_message("Настю!", update["message"]["chat"]["id"])
 
-        elif re.search('(пошути)|(шуткани)', text, re.IGNORECASE):
-            send_message(shutka(), update["message"]["chat"]["id"])
+        elif re.search('(ithumor)|(пошути)|(шуткани)', text, re.IGNORECASE):
+            send_message(shutka_ithappens(), update["message"]["chat"]["id"])
+
+        elif re.search('(bayan)|(баян)|(баш)|(история)', text, re.IGNORECASE):
+            send_message(shutka_bash(), update["message"]["chat"]["id"])
+
+        elif re.search('(film)|(фильм)|(что посмотреть)|(кино)', text, re.IGNORECASE):
+            send_message(good_film(), update["message"]["chat"]["id"])
 
         elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
             send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
 
         elif re.search('(картинка вики)|(вики картинка)', text, re.IGNORECASE):
             send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
-            #print(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1])
 
-        #chat = update["message"]["chat"]["id"]
         else:
             send_message(str('+ ' + text + ' +'), update["message"]["chat"]["id"])
         time.sleep(1)
@@ -74,7 +89,6 @@ def get_last_chat_id_and_text(updates):
     text = updates["result"][last_update]["message"]["text"]
     chat_id = updates["result"][last_update]["message"]["chat"]["id"]
     return (text, chat_id)
-
 
 def send_message(text, chat_id):
     text = urllib.parse.quote_plus(text)
@@ -97,19 +111,40 @@ def main():
             echo_all(updates)
         time.sleep(5)
 
-def shutka():
-  # парсим итхэппенс и берём случайную хохму
-    site = requests.get('https://ithappens.me/random');
+def shutka_ithappens():
+    # парсим итхэппенс и берём случайную хохму
+    site = requests.get('https://ithappens.me/random')
     if site.status_code is 200:
-        content = BeautifulSoup(site.content, 'html.parser')
-        questions = content.find_all(class_='story')
-        text = ''.join(BeautifulSoup(str(questions[0]), "html.parser").findAll(text=True))
-        m = re.search('\n{5}(.|\n)*?(\.(.|\n)*?noindex)', text)
-        bingo = m.group(0)
-        m = re.search('\S(.|\n)*?(.|\n)*?(\n\s )', bingo)
-        bingo = m.group(0)
-        return bingo
+        content = BeautifulSoup(site.content, 'html5lib')
+        stories = content.find_all(class_='story')
+        texts = stories[0].find_all(class_='text')
+        text = ''.join(BeautifulSoup(str(texts[0]).replace('</p><p>', '\n'), "html5lib").findAll(text=True))
+        return str(text)
 
+
+def shutka_bash():
+    # парсим баш и берём случайный баян
+    site = requests.get('https://bash.im/random')
+    if site.status_code is 200:
+        content = BeautifulSoup(site.content, 'html5lib')
+        citates = content.find_all(class_='text')
+        text_wow = ''.join(BeautifulSoup(str(citates[0]).replace('<br/>', '\n'), "html5lib").findAll(text=True))
+        return str(text_wow)
+
+
+def good_film():
+    # парсим кинопоиск и берём случайный хороший фильм с 2010 года и с рейтингом не ниже 7.4 (максимум 200 в списке)
+    site = requests.get('https://www.kinopoisk.ru/top/navigator/m_act[years]/2010%3A2018/m_act[num_vote]/1005/m_act[rating]/7.4%3A/m_act[tomat_rating]/71%3A/m_act[review_procent]/60%3A/m_act[ex_rating]/7.5%3A/m_act[is_film]/on/order/rating/perpage/200/#results')
+    if site.status_code is 200:
+        content = BeautifulSoup(site.content, 'html5lib')
+        good_films = content.find_all(class_='name')
+        chosen_good_film = good_films[random.randint(0, len(good_films))]
+        m = re.search('<a href="(\s|\S)*?"', str(chosen_good_film))
+        chosen_good_film_url = ('https://www.kinopoisk.ru' + m.group(0)[9:-1])
+        chosen_good_film_href = chosen_good_film_url + ' '
+        chosen_good_film_text = ' '
+        text_message = chosen_good_film_text + chosen_good_film_href
+        return text_message
 
 
 def wiki_stat_oftheday():
@@ -188,7 +223,6 @@ def wiki_pic_oftheday():
             # print(picoftheday_text)
 
         return picoftheday_pic, picoftheday_text
-        #print(requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendPhoto?chat_id=292397556&photo=' + picoftheday_pic + '&caption=' + picoftheday_text))
 
 
 
@@ -202,11 +236,37 @@ def wiki_pic_oftheday():
 
 
 ################## СТАРТ БОТА
-print(':DDDDDDDDDDDDDDDDDD   SUTATO! Бот начал работу --------> ' + str(datetime.datetime.now()))
+print(':DDDDD SUTATO! Бот начал работу ---> ' + str(datetime.datetime.now()))
 
 if __name__ == '__main__':
     main()
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########## для дебага
+#print(requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendPhoto?chat_id=292397556&photo=' + picoftheday_pic + '&caption=' + picoftheday_text))
 
 
