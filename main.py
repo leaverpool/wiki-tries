@@ -38,52 +38,88 @@ def get_last_update_id(updates):
     return max(update_ids)
 
 
+
 # здесь мы формируем ответные сообщения
 def echo_all(updates):
     for update in updates["result"]:
-        text = update["message"]["text"]
-        print(str(datetime.datetime.now()) + ': ' + text)
+        #print(str(update))  # {'update_id': 427648189, 'message': {'message_id': 1107, 'from': {'id': 292397556, 'is_bot': False, 'first_name': 'Андрей', 'last_name': 'Левчук', 'username': 'ErugoPurakushi', 'language_code': 'ru'}, 'chat': {'id': 292397556, 'first_name': 'Андрей', 'last_name': 'Левчук', 'username': 'ErugoPurakushi', 'type': 'private'}, 'date': 1540835172, 'text': 'ABC'}}
+        number_of_exceptions = 0
 
-        if str(text) == "123":
-            send_message("циферки!", update["message"]["chat"]["id"])
 
-        elif re.search('(прив)|(хэй)|(здрав)|(добрый)|(hi)|(hello)', text, re.IGNORECASE):
-            send_message("""Привет! Это тестовый бот, но он уже кое-что умеет (например, постить баяны с Баша).
+
+        message_was_sent = 0
+        try:  # пробуем поймать TEXT из входящего сообщения
+            text = update["message"]["text"]
+            #text = 'Сорян, не тот тип входящего сообщения...'
+            print(str(datetime.datetime.now()) + ': ' + str(text))  # 2018-10-29 20:46:15.614076: ABC
+
+            if str(text) == "123":
+                send_message("циферки!", update["message"]["chat"]["id"])
+
+            elif re.search('(прив)|(хэй)|(здрав)|(добрый)|(hi)|(hello)', str(text), re.IGNORECASE):
+                send_message("""Привет! Это тестовый бот, но он уже кое-что умеет (например, постить баяны с Баша).
 Список всех доступных команд: /help""", update["message"]["chat"]["id"])
 
-        elif re.search('(умеешь)|(help)|(command)|(помощь)|(команд)|(возможност)', text, re.IGNORECASE):
-            send_message("""Список всех команд, известных боту:
+            elif re.search('(умеешь)|(help)|(command)|(помощь)|(команд)|(возможност)', str(text), re.IGNORECASE):
+                send_message("""Список всех команд, известных боту:
 Шутка с ithappens: (ithumor)|(пошути)|(шуткани)
 Баян с bash: (bayan)|(баян)|(баш)|(история)
-Хороший фильм: (film)|(фильм)|(что посмотреть)|(кино)
+Хороший фильм: (film)|(кинопоиск)
+Трендовый фильм с IMDb: (imdb)|(фильм)|(что посмотреть)|(кино)
 Статья дня с Вики (допилю, что отправлялась автоматом): (статья вики)|(вики статья)
 Картинка дня с Вики (тоже допилю): (картинка вики)|(вики картинка)
-            """, update["message"]["chat"]["id"])
+                """, update["message"]["chat"]["id"])
 
-        elif re.search('кого любит андрей', text, re.IGNORECASE):
-            send_message("Настю!", update["message"]["chat"]["id"])
+            elif re.search('кого любит андрей', text, re.IGNORECASE):
+                send_message("Настю!", update["message"]["chat"]["id"])
 
-        elif re.search('(ithumor)|(пошути)|(шуткани)', text, re.IGNORECASE):
-            send_message(shutka_ithappens(), update["message"]["chat"]["id"])
+            elif re.search('(ithumor)|(пошути)|(шуткани)', text, re.IGNORECASE):
+                send_message(shutka_ithappens(), update["message"]["chat"]["id"])
 
-        elif re.search('(bayan)|(баян)|(баш)|(история)', text, re.IGNORECASE):
-            send_message(shutka_bash(), update["message"]["chat"]["id"])
+            elif re.search('(bayan)|(баян)|(баш)|(история)', text, re.IGNORECASE):
+                send_message(shutka_bash(), update["message"]["chat"]["id"])
 
-        elif re.search('(film)|(кинопоиск)', text, re.IGNORECASE):
-            send_message(good_film_kinopoisk(), update["message"]["chat"]["id"])
+            elif re.search('(film)|(кинопоиск)', text, re.IGNORECASE):
+                send_message(good_film_kinopoisk(), update["message"]["chat"]["id"])
 
-        elif re.search('(imdb)|(фильм)|(что посмотреть)|(кино)', text, re.IGNORECASE):
-            send_message(good_film_imdb(), update["message"]["chat"]["id"])
+            elif re.search('(imdb)|(фильм)|(что посмотреть)|(кино)', text, re.IGNORECASE):
+                send_message(good_film_imdb(), update["message"]["chat"]["id"])
 
-        elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
-            send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
+            elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
+                send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
 
-        elif re.search('(картинка вики)|(вики картинка)', text, re.IGNORECASE):
-            send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
+            elif re.search('(картинка вики)|(вики картинка)', text, re.IGNORECASE):
+                send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
 
-        else:
-            send_message(str('+ ' + text + ' +'), update["message"]["chat"]["id"])
+            else:
+                send_message(('+ ' + text + ' +'), update["message"]["chat"]["id"])
+
+            message_was_sent = 1
+        except:
+            pass
+
+
+        try:  # пробуем поймать CONTACT из входящего сообщения
+            contact = update["message"]["contact"]
+            print(str(datetime.datetime.now()) + ': ' + str(contact))  # 2018-10-29 20:46:15.614076: ABC
+
+            if re.search('(phone_number)|(first_name)', str(contact), re.IGNORECASE):
+                send_message(('О, да здесь контакт!\n' + str(contact) + '\nВот это да!'), update["message"]["chat"]["id"])
+
+            message_was_sent = 1
+        except:
+            pass
+
+
+
+        if message_was_sent == 0:
+            send_message("Извините, но я таких сообщений ещё не понимаю...(Не распознан тип входящего сообщения)", update["message"]["chat"]["id"])
+
         time.sleep(1)
+
+
+
+
 
 
 def get_last_chat_id_and_text(updates):

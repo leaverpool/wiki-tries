@@ -41,17 +41,32 @@ def get_last_update_id(updates):
 # здесь мы формируем ответные сообщения
 def echo_all(updates):
     for update in updates["result"]:
-        text = update["message"]["text"]
-        print(str(datetime.datetime.now()) + ': ' + text)
+        #print(str(update))  # {'update_id': 427648189, 'message': {'message_id': 1107, 'from': {'id': 292397556, 'is_bot': False, 'first_name': 'Андрей', 'last_name': 'Левчук', 'username': 'ErugoPurakushi', 'language_code': 'ru'}, 'chat': {'id': 292397556, 'first_name': 'Андрей', 'last_name': 'Левчук', 'username': 'ErugoPurakushi', 'type': 'private'}, 'date': 1540835172, 'text': 'ABC'}}
+        number_of_exceptions = 0
+        try:
+            text = update["message"]["text"]
+        except:
+            number_of_exceptions =+ 1
+            pass
+        try:
+            text = update["message"]["contact"]
+        except:
+            number_of_exceptions = + 1
+            pass
+        if number_of_exceptions == 2:
+            text = 'Сорян, не тот тип входящего сообщения...'
+
+        #text = update["message"]["contact"]
+        print(str(datetime.datetime.now()) + ': ' + str(text))  # 2018-10-29 20:46:15.614076: ABC
 
         if str(text) == "123":
             send_message("циферки!", update["message"]["chat"]["id"])
 
-        elif re.search('(прив)|(хэй)|(здрав)|(добрый)|(hi)|(hello)', text, re.IGNORECASE):
+        elif re.search('(прив)|(хэй)|(здрав)|(добрый)|(hi)|(hello)', str(text), re.IGNORECASE):
             send_message("""Привет! Это тестовый бот, но он уже кое-что умеет (например, постить баяны с Баша).
 Список всех доступных команд: /help""", update["message"]["chat"]["id"])
 
-        elif re.search('(умеешь)|(help)|(command)|(помощь)|(команд)|(возможност)', text, re.IGNORECASE):
+        elif re.search('(умеешь)|(help)|(command)|(помощь)|(команд)|(возможност)', str(text), re.IGNORECASE):
             send_message("""Список всех команд, известных боту:
 Шутка с ithappens: (ithumor)|(пошути)|(шуткани)
 Баян с bash: (bayan)|(баян)|(баш)|(история)
@@ -60,26 +75,29 @@ def echo_all(updates):
 Картинка дня с Вики (тоже допилю): (картинка вики)|(вики картинка)
             """, update["message"]["chat"]["id"])
 
-        elif re.search('кого любит андрей', text, re.IGNORECASE):
+        elif re.search('кого любит андрей', str(text), re.IGNORECASE):
             send_message("Настю!", update["message"]["chat"]["id"])
 
-        elif re.search('(ithumor)|(пошути)|(шуткани)', text, re.IGNORECASE):
+        elif re.search('(ithumor)|(пошути)|(шуткани)', str(text), re.IGNORECASE):
             send_message(shutka_ithappens(), update["message"]["chat"]["id"])
 
-        elif re.search('(bayan)|(баян)|(баш)|(история)', text, re.IGNORECASE):
+        elif re.search('(bayan)|(баян)|(баш)|(история)', str(text), re.IGNORECASE):
             send_message(shutka_bash(), update["message"]["chat"]["id"])
 
-        elif re.search('(film)|(фильм)|(что посмотреть)|(кино)', text, re.IGNORECASE):
-            send_message(good_film(), update["message"]["chat"]["id"])
+        elif re.search('(film)|(кинопоиск)', str(text), re.IGNORECASE):
+            send_message(good_film_kinopoisk(), update["message"]["chat"]["id"])
 
-        elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
+        elif re.search('(imdb)|(фильм)|(что посмотреть)|(кино)', str(text), re.IGNORECASE):
+            send_message(good_film_imdb(), update["message"]["chat"]["id"])
+
+        elif re.search('(статья вики)|(вики статья)', str(text), re.IGNORECASE):
             send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
 
-        elif re.search('(картинка вики)|(вики картинка)', text, re.IGNORECASE):
+        elif re.search('(картинка вики)|(вики картинка)', str(text), re.IGNORECASE):
             send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
 
         else:
-            send_message(str('+ ' + text + ' +'), update["message"]["chat"]["id"])
+            send_message(('+ ' + str(text) + ' +'), update["message"]["chat"]["id"])
         time.sleep(1)
 
 
@@ -132,7 +150,7 @@ def shutka_bash():
         return str(text_wow)
 
 
-def good_film():
+def good_film_kinopoisk():
     # парсим кинопоиск и берём случайный хороший фильм с 2010 года и с рейтингом не ниже 7.4 (максимум 200 в списке)
     site = requests.get('https://www.kinopoisk.ru/top/navigator/m_act[years]/2010%3A2018/m_act[num_vote]/1005/m_act[rating]/7.4%3A/m_act[tomat_rating]/71%3A/m_act[review_procent]/60%3A/m_act[ex_rating]/7.5%3A/m_act[is_film]/on/order/rating/perpage/200/#results')
     if site.status_code is 200:
@@ -145,6 +163,18 @@ def good_film():
         chosen_good_film_text = ' '
         text_message = chosen_good_film_text + chosen_good_film_href
         return text_message
+
+
+def good_film_imdb():
+    # парсим IMDB и берём случайный фильм из сотни сравнительно новых и трендовых
+    site = requests.get('https://www.imdb.com/chart/moviemeter?pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=4da9d9a5-d299-43f2-9c53-f0efa18182cd&pf_rd_r=KS4GXFQ7P2TBMQ4W7ZRR&pf_rd_s=right-4&pf_rd_t=15506&pf_rd_i=toptv&ref_=chttvtp_ql_2')
+    if site.status_code is 200:
+        content = BeautifulSoup(site.content, 'html5lib')
+        good_films = content.find_all(class_='titleColumn')
+        chosen_good_film = good_films[random.randint(0, len(good_films) - 1)]
+        m = re.search('<a href="(\s|\S)*?"', str(chosen_good_film))
+        chosen_good_film_url = ('https://www.imdb.com' + m.group(0)[9:-1])
+        return chosen_good_film_url
 
 
 def wiki_stat_oftheday():
