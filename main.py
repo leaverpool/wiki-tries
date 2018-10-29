@@ -88,7 +88,7 @@ def echo_all(updates):
             elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
                 send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
 
-            elif re.search('(картинка вики)|(вики картинка)', text, re.IGNORECASE):
+            elif re.search('(картинка вики)|(вики картинка)', str(text), re.IGNORECASE):
                 send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
 
             else:
@@ -249,18 +249,14 @@ def wiki_pic_oftheday():
         picoftheday_pic = content.find_all(class_='main-box-content')
         picoftheday_pic = re.search('src="(\s|\S)*?\.jpg"', str(picoftheday_pic[0])).group(0)
         picoftheday_pic = ('https:' + picoftheday_pic[5:-1])
-        # print(picoftheday_pic)
 
         # ищем текст picoftheday_text
         picoftheday_text_with_hrefs = content.find_all(class_='main-box-imageCaption')
-        picoftheday_text_with_hrefs = str(picoftheday_text_with_hrefs[0])[39:-12]
-        picoftheday_text_with_hrefs = picoftheday_text_with_hrefs.replace("/wiki/", "https://ru.wikipedia.org/wiki/")
-
-        print(picoftheday_pic)
-        print(picoftheday_text_with_hrefs)
+        picoftheday_text_with_hrefs = str(picoftheday_text_with_hrefs[0])
+        picoftheday_text_with_hrefs = (''.join(BeautifulSoup(picoftheday_text_with_hrefs, "html5lib").findAll(text=True)))
+        picoftheday_text_with_hrefs = picoftheday_text_with_hrefs.replace("[d]", "")
 
         return picoftheday_pic, picoftheday_text_with_hrefs
-
 
 
 
