@@ -74,7 +74,7 @@ def echo_all(updates):
                 send_message("""Клавиатура включена. Для удаления введите: /removekeyb&reply_markup={"keyboard":[["баш","ithumor"],["film","imdb"],["вики статья"],["вики картинка"]]}""", update["message"]["chat"]["id"])
 
             elif re.search('/removekeyb', text, re.IGNORECASE):
-                send_message("""Клавиатура удалена. Для восстановления введите: /getkeyb&reply_markup={"remove_keyboard":true}""", update["message"]["chat"]["id"])
+                send_keyb_message("""Клавиатура удалена. Для восстановления введите: /getkeyb""", '{"remove_keyboard":true}', update["message"]["chat"]["id"])
 
             elif re.search('кого любит андрей', text, re.IGNORECASE):
                 send_message("Настю!", update["message"]["chat"]["id"])
@@ -138,6 +138,11 @@ def get_last_chat_id_and_text(updates):
 def send_message(text, chat_id):
     text = urllib.parse.quote_plus(text)
     url = URL + "sendMessage?text={}&chat_id={}&parse_mode=HTML".format(text, chat_id)
+    get_url(url)
+
+def send_keyb_message(text, rep_markup, chat_id):
+    text = urllib.parse.quote_plus(text)
+    url = URL + "sendMessage?text={}&reply_markup={}&chat_id={}".format(text, rep_markup, chat_id)
     get_url(url)
 
 def send_photo(photo, text, chat_id):
