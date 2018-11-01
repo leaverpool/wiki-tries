@@ -96,7 +96,7 @@ def echo_all(updates):
             elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
                 send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
 
-            elif re.search('(картинка вики)|(вики картинка)', str(text), re.IGNORECASE):
+            elif re.search('(картинка вики)|(вики картинка)', text, re.IGNORECASE):
                 send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
 
             else:
