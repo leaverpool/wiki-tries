@@ -70,6 +70,12 @@ def echo_all(updates):
 Картинка дня с Вики (тоже допилю): (картинка вики)|(вики картинка)
                 """, update["message"]["chat"]["id"])
 
+            elif re.search('/getkeyb', text, re.IGNORECASE):
+                send_message("""Клавиатура включена. Для удаления введите: /removekeyb&reply_markup={"keyboard":[["баш","ithumor"],["film","imdb"],["вики статья"],["вики картинка"]]}""", update["message"]["chat"]["id"])
+
+            elif re.search('/removekeyb', text, re.IGNORECASE):
+                send_message("""Клавиатура удалена. Для восстановления введите: /getkeyb&reply_markup={"remove_keyboard":true}""", update["message"]["chat"]["id"])
+
             elif re.search('кого любит андрей', text, re.IGNORECASE):
                 send_message("Настю!", update["message"]["chat"]["id"])
 
