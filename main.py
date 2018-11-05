@@ -8,6 +8,7 @@ import datetime
 from bs4 import BeautifulSoup
 import re
 import random
+import csv
 
 TOKEN = "652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20"
 URL = "https://api.telegram.org/bot{}/".format(TOKEN)
@@ -72,6 +73,9 @@ def echo_all(updates):
 Выключить клавиатуру: /removekeyb
                 """, update["message"]["chat"]["id"])
 
+            elif re.search('/start', text, re.IGNORECASE):
+                send_keyb_message("""Здравстуйте! Вас приветствует ЕА Столовый Бот. Для начала работы отправьте ваш контакт.""", '{"one_time_keyboard":true,"keyboard":[[{"text":"Отправить свой контакт боту","request_contact":true}],["Не отправлять"]]}', update["message"]["chat"]["id"])
+
             elif re.search('/getkeyb', text, re.IGNORECASE):
                 send_keyb_message("""Клавиатура включена. Для удаления введите: /removekeyb""", '{"keyboard":[["баш","ithumor"],["film","imdb"],["вики статья"],["вики картинка"]]}', update["message"]["chat"]["id"])
 
@@ -100,19 +104,42 @@ def echo_all(updates):
                 send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
 
             else:
-                send_message(('+ ', text, ' +'), update["message"]["chat"]["id"])
+                send_message(('+ ' + str(text) + ' +'), update["message"]["chat"]["id"])
 
             message_was_sent = 1
         except:
             pass
 
 
-        try:  # пробуем поймать CONTACT из входящего сообщения
+        try:  # пробуем поймать CONTACT из входящего сообщения и запихнуть в нашу базу, если ещё нет
             contact = update["message"]["contact"]
-            print(str(datetime.datetime.now()) + ': ' + str(contact))  # 2018-10-29 20:46:15.614076: ABC
 
+            print(str(datetime.datetime.now()) + ': ' + str(contact))  # 2018-10-29 20:46:15.614076: {'phone_number': '+79046139180', 'first_name': 'Андрей', 'last_name': 'Левчук', 'user_id': 292397556}
             if re.search('(phone_number)|(first_name)', str(contact), re.IGNORECASE):
-                send_message(('О, да здесь контакт!\n' + str(contact) + '\nВот это да!'), update["message"]["chat"]["id"])
+                if str(contact.get("user_id")) == str(update["message"]["chat"]["id"]):
+                    send_message("О, так это же ваш контакт:", update["message"]["chat"]["id"])
+                else:
+                    send_message("Нужен именно ваш контакт, а вы прислали чужой:", update["message"]["chat"]["id"])
+                send_message(('Вот, что вы прислали:' + '\nНомер телефона: ' + str(contact.get("phone_number")) + '\nИмя: ' + str(contact.get("first_name")) + '\nФамилия: ' + str(contact.get("last_name")) + '\nUSER_ID: ' + str(contact.get("user_id"))), update["message"]["chat"]["id"])
+                if str(contact.get("user_id")) == str(update["message"]["chat"]["id"]):
+                    send_message("Сейчас поищем ваши данные в базе по USER_ID...", update["message"]["chat"]["id"])
+                    found_cont = 0
+                    with open(r'contacts.csv', newline='', encoding='utf-8') as f:
+                        reader = csv.reader(f, dialect='excel-tab')
+                        for row in reader:
+                            if row[3] == str(contact.get("user_id")):
+                                found_cont = 1
+                                send_message(('Вы найдены в базе как:' + '\nНомер телефона: ' + str(row[0]) + '\nИмя: ' + str(row[1]) + '\nФамилия: ' + str(row[2]) + '\nUSER_ID: ' + str(row[3])), update["message"]["chat"]["id"])
+                    if found_cont == 0:
+                        send_message("Вы не были надены в базе данных, сейчас добавим...", update["message"]["chat"]["id"])
+                        with open(r'contacts.csv', 'a', newline='', encoding='utf-8') as f:  # 'a' - append - добавляем, 'w' - заменяем
+                            writer = csv.writer(f, dialect='excel-tab')
+                            writer.writerow([str(contact.get("phone_number")), str(contact.get("first_name")), str(contact.get("last_name")), str(contact.get("user_id"))])
+                        with open(r'contacts.csv', newline='', encoding='utf-8') as f:
+                            reader = csv.reader(f, dialect='excel-tab')
+                            for row in reader:
+                                if row[3] == str(contact.get("user_id")):
+                                    send_message(('Готово! Вы занесены в базу как:' + '\nНомер телефона: ' + str(row[0]) + '\nИмя: ' + str(row[1]) + '\nФамилия: ' + str(row[2]) + '\nUSER_ID: ' + str(row[3])), update["message"]["chat"]["id"])
 
             message_was_sent = 1
         except:
@@ -158,10 +185,14 @@ def main():
     last_update_id = None
     while True:
         updates = get_updates(last_update_id)
-        if len(updates["result"]) > 0:
-            last_update_id = get_last_update_id(updates) + 1
-            echo_all(updates)
-        time.sleep(5)
+        try:
+            if len(updates["result"]) > 0:
+                last_update_id = get_last_update_id(updates) + 1
+                echo_all(updates)
+            time.sleep(5)
+        except:
+            print('ОШИПКО!!! --KeyError: result???--')
+            pass
 
 def shutka_ithappens():
     # парсим итхэппенс и берём случайную хохму

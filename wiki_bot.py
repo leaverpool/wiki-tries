@@ -68,7 +68,18 @@ def echo_all(updates):
 Трендовый фильм с IMDb: (imdb)|(фильм)|(что посмотреть)|(кино)
 Статья дня с Вики (допилю, что отправлялась автоматом): (статья вики)|(вики статья)
 Картинка дня с Вики (тоже допилю): (картинка вики)|(вики картинка)
+Включить клавиатуру: /getkeyb
+Выключить клавиатуру: /removekeyb
                 """, update["message"]["chat"]["id"])
+
+            elif re.search('/start', text, re.IGNORECASE):
+                send_keyb_message("""Здравстуйте! Вас приветствует ЕА Столовый Бот. Для начала работы отправьте ваш контакт.""", '{"one_time_keyboard":true,"keyboard":[[{"text":"Отправить свой контакт боту","request_contact":true}],["Не отправлять"]]}}', update["message"]["chat"]["id"])
+
+            elif re.search('/getkeyb', text, re.IGNORECASE):
+                send_keyb_message("""Клавиатура включена. Для удаления введите: /removekeyb""", '{"keyboard":[["баш","ithumor"],["film","imdb"],["вики статья"],["вики картинка"]]}', update["message"]["chat"]["id"])
+
+            elif re.search('/removekeyb', text, re.IGNORECASE):
+                send_keyb_message("""Клавиатура удалена. Для восстановления введите: /getkeyb""", '{"remove_keyboard":true}', update["message"]["chat"]["id"])
 
             elif re.search('кого любит андрей', text, re.IGNORECASE):
                 send_message("Настю!", update["message"]["chat"]["id"])
@@ -88,11 +99,11 @@ def echo_all(updates):
             elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
                 send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
 
-            elif re.search('(картинка вики)|(вики картинка)', str(text), re.IGNORECASE):
+            elif re.search('(картинка вики)|(вики картинка)', text, re.IGNORECASE):
                 send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
 
             else:
-                send_message(('+ ' + text + ' +'), update["message"]["chat"]["id"])
+                send_message(('+ ', text, ' +'), update["message"]["chat"]["id"])
 
             message_was_sent = 1
         except:
@@ -134,6 +145,11 @@ def send_message(text, chat_id):
     url = URL + "sendMessage?text={}&chat_id={}&parse_mode=HTML".format(text, chat_id)
     get_url(url)
 
+def send_keyb_message(text, rep_markup, chat_id):
+    text = urllib.parse.quote_plus(text)
+    url = URL + "sendMessage?text={}&reply_markup={}&chat_id={}".format(text, rep_markup, chat_id)
+    get_url(url)
+
 def send_photo(photo, text, chat_id):
     text = urllib.parse.quote_plus(text)
     url = URL + "sendPhoto?photo={}&caption={}&chat_id={}&parse_mode=HTML".format(photo, text, chat_id)
@@ -145,10 +161,14 @@ def main():
     last_update_id = None
     while True:
         updates = get_updates(last_update_id)
-        if len(updates["result"]) > 0:
-            last_update_id = get_last_update_id(updates) + 1
-            echo_all(updates)
-        time.sleep(5)
+        try:
+            if len(updates["result"]) > 0:
+                last_update_id = get_last_update_id(updates) + 1
+                echo_all(updates)
+            time.sleep(5)
+        except:
+            print('KeyError: result???')
+            pass
 
 def shutka_ithappens():
     # парсим итхэппенс и берём случайную хохму
@@ -301,5 +321,42 @@ if __name__ == '__main__':
 
 ########## для дебага
 #print(requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendPhoto?chat_id=292397556&photo=' + picoftheday_pic + '&caption=' + picoftheday_text))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import csv
+fields = ['first', 'second', 'third', '4', 3321, [0, 1, 2]]
+
+incoming_message = "{'phone_number': '+79046139180', 'first_name': 'Андрей', 'last_name': 'Левчук', 'user_id': 292397556}"
+
+
+with open(r'name.csv', 'a', newline='', encoding='utf-8') as f:  # 'a' - append - добавляем, 'w' - заменяем
+    writer = csv.writer(f, dialect='excel-tab')
+    writer.writerow(fields)
+
+
+with open(r'name.csv', newline='', encoding='utf-8') as f:
+    reader = csv.reader(f, dialect='excel-tab')
+    for row in reader:
+        print(row)
+
+
+
+
+
 
 
