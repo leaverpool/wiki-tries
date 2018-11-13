@@ -86,29 +86,75 @@ def echo_all(updates):
                 send_message("Настю!", update["message"]["chat"]["id"])
 
             elif re.search('(ithumor)|(пошути)|(шуткани)', text, re.IGNORECASE):
+                send_typing(update["message"]["chat"]["id"])
                 send_message(shutka_ithappens(), update["message"]["chat"]["id"])
 
             elif re.search('(bayan)|(баян)|(баш)|(история)', text, re.IGNORECASE):
+                send_typing(update["message"]["chat"]["id"])
                 send_message(shutka_bash(), update["message"]["chat"]["id"])
 
             elif re.search('(film)|(кинопоиск)', text, re.IGNORECASE):
+                send_typing(update["message"]["chat"]["id"])
                 send_message(good_film_kinopoisk(), update["message"]["chat"]["id"])
 
             elif re.search('(imdb)|(фильм)|(что посмотреть)|(кино)', text, re.IGNORECASE):
+                send_typing(update["message"]["chat"]["id"])
                 send_message(good_film_imdb(), update["message"]["chat"]["id"])
 
             elif re.search('(статья вики)|(вики статья)', text, re.IGNORECASE):
+                send_typing(update["message"]["chat"]["id"])
                 send_message(wiki_stat_oftheday(), update["message"]["chat"]["id"])
 
             elif re.search('(картинка вики)|(вики картинка)', text, re.IGNORECASE):
+                send_typing(update["message"]["chat"]["id"])
                 send_photo(wiki_pic_oftheday()[0], wiki_pic_oftheday()[1], update["message"]["chat"]["id"])
+
+            elif re.search('/getstolkeyb', text, re.IGNORECASE):
+                send_keyb_message("""Клавиатура-меню включена. Для отключения введите: /removekeyb""", '{"keyboard":[["/первое","/второе","/гарнир"],["/напиток","/салат","/выпечка"],["/сброс","/готово"]]}', update["message"]["chat"]["id"])
+
+            elif re.search('/первое', text, re.IGNORECASE):
+                send_typing(update["message"]["chat"]["id"])
+
+                ## проверяем, есть ли уже запись в сегодняшнем файле, добавляем с нулялми, если нет
+                found_today = 0
+                that_user_id = str(update["message"]["chat"]["id"])
+                with open(r'stol_order_today.csv', newline='', encoding='utf-8') as f:
+                    for row in csv.reader(f, dialect='excel-tab'):
+                        if row and row[0] == that_user_id:
+                            found_today = 1
+                            break
+                if found_today == 0:
+                    with open(r'stol_order_today.csv', 'a', newline='', encoding='utf-8') as f:
+                        row = [that_user_id, '1', '0', '0', '0', '0', '0']
+                        csv.writer(f, dialect='excel-tab').writerow(row)
+
+                ## ищем уже точно существующую строку с айди пользователя и прибавляем +1 первое
+                new_rows = []
+                perv = 0
+                with open(r'stol_order_today.csv', encoding='utf-8') as f:
+                    for row in csv.reader(f, dialect='excel-tab'):
+                        new_row = row
+                        if row and row[0] == that_user_id:  # ищем строку с айди пользоваетля в сегодняшнем файле
+                            new_row = [row[0], int(row[1]) + 1, row[2], row[3], row[4], row[5], row[6]]
+                            perv = int(row[1]) + 1
+                        new_rows.append(new_row)  # add the modified rows
+                # overwrite old shit with new temp shit
+                with open(r'stol_order_today.csv', 'w', newline='', encoding='utf-8') as f:
+                    for row in new_rows:
+                        csv.writer(f, dialect='excel-tab').writerow(row)
+
+                send_message(('первое ' + str(perv) + ' первое'), update["message"]["chat"]["id"])
+
+
 
             else:
                 send_message(('+ ' + str(text) + ' +'), update["message"]["chat"]["id"])
 
             message_was_sent = 1
         except:
-            pass
+            print('ERRRRROOOORRR!!!')
+            print(e.__doc__)
+            print(e.message)
 
 
         try:  # пробуем поймать CONTACT из входящего сообщения и запихнуть в нашу базу, если ещё нет
@@ -148,7 +194,7 @@ def echo_all(updates):
 
 
         if message_was_sent == 0:
-            send_message("Извините, но я таких сообщений ещё не понимаю...(Не распознан тип входящего сообщения)", update["message"]["chat"]["id"])
+            send_message("Ошибка при попытке ответить на сообщение(((", update["message"]["chat"]["id"])
 
         time.sleep(1)
 
@@ -174,6 +220,10 @@ def send_keyb_message(text, rep_markup, chat_id):
     url = URL + "sendMessage?text={}&reply_markup={}&chat_id={}".format(text, rep_markup, chat_id)
     get_url(url)
 
+def send_typing(chat_id):
+    url = URL + "sendChatAction?chat_id={}&action=typing".format(chat_id)
+    get_url(url)
+
 def send_photo(photo, text, chat_id):
     text = urllib.parse.quote_plus(text)
     url = URL + "sendPhoto?photo={}&caption={}&chat_id={}&parse_mode=HTML".format(photo, text, chat_id)
@@ -189,7 +239,7 @@ def main():
             if len(updates["result"]) > 0:
                 last_update_id = get_last_update_id(updates) + 1
                 echo_all(updates)
-            time.sleep(5)
+            time.sleep(1)
         except:
             print('ОШИПКО!!! --KeyError: result???--')
             pass
@@ -347,3 +397,9 @@ if __name__ == '__main__':
 #print(requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendPhoto?chat_id=292397556&photo=' + picoftheday_pic + '&caption=' + picoftheday_text))
 
 
+
+
+#print(requests.get('https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendPhoto?chat_id=292397556&photo=' + picoftheday_pic + '&caption=' + picoftheday_text))
+
+
+#https://api.telegram.org/bot652844002:AAFPHFs48zVNiEoNv9Yp1rpp4l2fmBjOZ20/sendChatAction?chat_id=292397556&action=typing

@@ -1,68 +1,34 @@
-class Matrix:
-  def __init__(self, rows, columns):
-    self.rows = rows
-    self.columns = columns
-    self.data = [[0 for x in range(rows)] for y in range(columns)] 
-  def rows_count(self):
-    return self.rows
-  def columns_count(self):
-    return self.columns
-  def sett(self, i, j, value):
-    self.data[i][j] = value
-  def get(self, i, j):
-    return self.data[i][j]
-  
-  # просто выводим сумму матриц
-  # def __add__(self, other):
-  #   res = []
-  #   for i in range(len(self.data)):
-  #       row = []
-  #       for j in range(len(self.data[0])):
-  #           row.append(self.data[i][j] + other.data[i][j])
-  #       res.append(row)
-  #   return res
+import csv
 
+## проверяем, есть ли уже запись в сегодняшнем файле, добавляем с нулялми, если нет
+found_today = 0
+that_user_id = str(292397556)
+with open(r'stol_order_today.csv', newline='', encoding='utf-8') as f:
+    for row in csv.reader(f, dialect='excel-tab'):
+        if row and row[0] == that_user_id:
+            found_today = 1
+            break
+if found_today == 0:
+    with open(r'stol_order_today.csv', 'a', newline='', encoding='utf-8') as f:
+        row = [that_user_id, '1', '0', '0', '0', '0', '0']
+        csv.writer(f, dialect='excel-tab').writerow(row)
 
-  def __add__(self, other):
-    res = Matrix(len(self.data), len(self.data[0]))
-    for i in range(len(self.data)):  # rows```
-        row = []
-        for j in range(len(self.data[0])):  # columns
-            res.sett(i, j, self.data[i][j] + other.data[i][j])
-    return res   
+## ищем уже точно существующую строку с айди пользователя и прибавляем +1 первое
+new_rows = []
+perv = 0
+with open(r'stol_order_today.csv', encoding='utf-8') as f:
+    for row in csv.reader(f, dialect='excel-tab'):
+        print(row)
+        new_row = row
+        if row and row[0] == that_user_id:  # ищем строку с айди пользоваетля в сегодняшнем файле
+            print('FOUNDED USER! lets update shit')
+            new_row = [row[0], int(row[1]) + 1, row[2], row[3], row[4], row[5], row[6]]
+            perv = int(row[1]) + 1
+            print(str(perv))
+        new_rows.append(new_row)  # add the modified rows
+# overwrite old shit with new temp shit
+with open(r'stol_order_today.csv', 'w', newline='', encoding='utf-8') as f:  # 'a' - append - добавляем, 'w' - заменяем
+    for row in new_rows:
+        csv.writer(f, dialect='excel-tab').writerow(row)
 
-
-  def __sub__(self, other):
-    pass
-  def __mul__(self, other):
-    pass
-  def __str__(self):
-    return(str(self.data))
-  def scalar_mul(self, other):
-    pass
-
-
-m1 = Matrix(3, 3)
-m2 = Matrix(3, 3)
-
-print(m1.rows_count())
-print(m1.columns_count())
-print(m1.get(2,2))
-
-for i in range(3):
-  m1.sett(i,i,6)
-  m2.sett(2-i, 2-i, 4)
-
-print(m2.data)
-print(m1.data)
-
-
-
-m3 = m1 + m2
-
-print('SUMMA:', m3.data)
-print(m3)
-
-
-
-
+print(type(perv))
