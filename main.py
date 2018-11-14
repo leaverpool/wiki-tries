@@ -334,18 +334,7 @@ def eastol_zakaz():
                 break
     if found_today == 0:
         with open(r'stol_order_today.csv', 'a', newline='', encoding='utf-8') as f:
-            if re.search('/первое', text, re.IGNORECASE):
-                row = [that_user_id, '1', '0', '0', '0', '0', '0']
-            if re.search('/второе', text, re.IGNORECASE):
-                row = [that_user_id, '0', '1', '0', '0', '0', '0']
-            if re.search('/гарнир', text, re.IGNORECASE):
-                row = [that_user_id, '0', '0', '1', '0', '0', '0']
-            if re.search('/напиток', text, re.IGNORECASE):
-                row = [that_user_id, '0', '0', '0', '1', '0', '0']
-            if re.search('/салат', text, re.IGNORECASE):
-                row = [that_user_id, '0', '0', '0', '0', '1', '0']
-            if re.search('/выпечка', text, re.IGNORECASE):
-                row = [that_user_id, '0', '0', '0', '0', '0', '1']
+            row = [that_user_id, '0', '0', '0', '0', '0', '0']
             csv.writer(f, dialect='excel-tab').writerow(row)
 
     ## ищем уже точно существующую строку с айди пользователя и прибавляем +1 первое
@@ -374,14 +363,13 @@ def eastol_zakaz():
                     selected_bludo = str(int(row[6]) + 1)
                     new_row = [row[0], row[1], row[2], row[3], row[4], row[5], selected_bludo]
                 # отправляем сообщение с обновлённым общим списком того, что пользователь взял
-                send_message(('Вы взяли:\nПервое: ' + row[1] + '\nВторое: ' + row[2] + '\nГарнир: ' + row[3] + '\nНапиток: ' + row[4] + '\nСалат: ' + row[5] + '\nВыпечка: ' + row[6]), update["message"]["chat"]["id"])
+                send_message(('Вы взяли:\nПервое: ' + str(new_row[1]) + 'Второе: ' + str(new_row[2]) + '\nГарнир: ' + str(new_row[3]) + 'Напиток: ' + str(new_row[4]) + '\nСалат: ' + str(new_row[5]) + 'Выпечка: ' + str(new_row[6])), update["message"]["chat"]["id"])
             new_rows.append(new_row)  # add the modified rows
     # overwrite old shit with new temp shit
     with open(r'stol_order_today.csv', 'w', newline='', encoding='utf-8') as f:
         for row in new_rows:
             csv.writer(f, dialect='excel-tab').writerow(row)
 
-    send_message(('первое ' + selected_bludo + ' первое'), update["message"]["chat"]["id"])
 
 
 
