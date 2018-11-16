@@ -242,6 +242,13 @@ def echo_all(updates):
 
 
 
+
+
+
+
+
+
+
 def get_last_chat_id_and_text(updates):
     num_updates = len(updates["result"])
     last_update = num_updates - 1
@@ -269,19 +276,44 @@ def send_photo(photo, text, chat_id):
     get_url(url)
 
 
+
+
+
+
+
+
+
+
+
+
+
 # главный скрипт
 def main():
     last_update_id = None
     while True:
-        updates = get_updates(last_update_id)
         try:
+            updates = get_updates(last_update_id)
             if len(updates["result"]) > 0:
                 last_update_id = get_last_update_id(updates) + 1
                 echo_all(updates)
             time.sleep(1)
         except:
-            print('ОШИПКО!!! --KeyError: result???--')
+            print('Какая-то ошибка главного скрипта')
             pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def shutka_ithappens():
     # парсим итхэппенс и берём случайную хохму
